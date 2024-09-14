@@ -1,7 +1,7 @@
 # Phishing Link Scanner
 
 ## Project Description
-This project, developed by [Your Name] as part of Brainwave Matrix Solutions, is a Python-based phishing link scanner that evaluates URLs to determine if they might be phishing attempts. It leverages various checks including common phishing keywords, URL structure analysis, typosquatting detection, and integration with VirusTotal for reputation checking.
+This project, developed by Martin Agoha as part of his internship at Brainwave Matrix Solutions, is a Python-based phishing link scanner. It evaluates URLs to determine if they might be phishing attempts, leveraging a variety of checks. The scanner analyzes common phishing keywords, inspects URL structures, detects typosquatting, and integrates with VirusTotal to assess the reputation of URLs.
 
 ## Features
 - Detects phishing URLs based on common keywords.

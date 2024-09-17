@@ -1,14 +1,19 @@
+from flask import Flask, request, jsonify, send_from_directory
+from decouple import config
 import requests
 from urllib.parse import urlparse
 import re
 import socket
-from flask import Flask, request, jsonify, send_from_directory
 
 app = Flask(__name__)
 
-# VirusTotal API settings (replace with your actual API key)
-API_KEY = "ba10bc5bc3751d63bb88c59a4da6ebe1965c2488f6a72cb0403c47cb88369c77"
+# VirusTotal API settings 
+API_KEY = config('VIRUSTOTAL_API_KEY')
+print("VirusTotal API Key:", API_KEY)  # Print the API key to verify it's loaded
 VIRUSTOTAL_URL = "https://www.virustotal.com/vtapi/v2/url/report"
+
+
+
 
 # Common phishing keywords to check for in URLs
 PHISHING_KEYWORDS = ['login', 'secure', 'bank', 'update', 'account', 'verify', 'confirm', 'signin', 'free', 'gift', 'money', 'win']

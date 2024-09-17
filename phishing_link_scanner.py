@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # VirusTotal API settings 
 API_KEY = config('VIRUSTOTAL_API_KEY')
-print("VirusTotal API Key:", API_KEY)  # Print the API key to verify it's loaded
+#print("VirusTotal API Key:", API_KEY)
 VIRUSTOTAL_URL = "https://www.virustotal.com/vtapi/v2/url/report"
 
 

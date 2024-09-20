@@ -69,15 +69,15 @@ for url in test_urls:
 
 .PHONY: install run test clean
 
-# Install required Python packages
+## Install required Python packages
 install:
 	pip install requests
 
-# Run the phishing link scanner
+## Run the phishing link scanner
 run:
 	python phishing_link_scanner.py
 
-# Test the script with predefined URLs
+## Test the script with predefined URLs
 test:
 	python -c "from phishing_link_scanner import phishing_link_scanner; \
 test_urls = [ \
@@ -92,7 +92,7 @@ for url in test_urls: \
 	result = phishing_link_scanner(url); \
 	print(f'URL: {url}\\nResult: {result}\\n')"
 
-# Clean up files (add any clean-up commands if needed)
+## Clean up files (add any clean-up commands if needed)
 clean:
 	rm -f *.pyc
 

@@ -3,17 +3,18 @@ from decouple import config
 import requests
 from urllib.parse import urlparse
 import re
-import socket
+import logging
 
 app = Flask(__name__)
 
-# VirusTotal API settings 
-API_KEY = config('VIRUSTOTAL_API_KEY')
-#print("VirusTotal API Key:", API_KEY)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+# VirusTotal API settings
+API_KEY = config('VIRUSTOTAL_API_KEY', default=None)
+if not API_KEY:
+    raise RuntimeError("VirusTotal API key is missing. Please set the VIRUSTOTAL_API_KEY environment variable.")
 VIRUSTOTAL_URL = "https://www.virustotal.com/vtapi/v2/url/report"
-
-
-
 
 # Common phishing keywords to check for in URLs
 PHISHING_KEYWORDS = ['login', 'secure', 'bank', 'update', 'account', 'verify', 'confirm', 'signin', 'free', 'gift', 'money', 'win']
@@ -35,45 +36,61 @@ def has_suspicious_keywords(url):
 
 # Function to check if an IP address is used in the URL instead of a domain
 def has_ip_in_url(url):
-    try:
-        hostname = urlparse(url).hostname
-        if hostname:
-            ip = socket.gethostbyname(hostname)
-            return False, "URL does not contain an IP address"
-    except socket.error:
-        return False, "Hostname could not be resolved to an IP address"
-    return False, "No IP address detected in URL"
+    hostname = urlparse(url).hostname
+    if hostname:
+        # Regex to check if the hostname is an IP address
+        if re.match(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', hostname):
+            return True, "URL contains an IP address"
+        return False, "No IP address detected in URL"
+    return False, "Invalid URL"
 
 # Function to query VirusTotal for URL reputation
 def check_virustotal(url):
     params = {'apikey': API_KEY, 'resource': url}
-    response = requests.get(VIRUSTOTAL_URL, params=params)
-    if response.status_code == 200:
+    try:
+        response = requests.get(VIRUSTOTAL_URL, params=params, timeout=10)  # 10 seconds timeout
+        response.raise_for_status()  # Will raise an HTTPError for bad responses
         result = response.json()
+
         if result.get("positives", 0) > 0:
             return True, "URL flagged by VirusTotal"
-    return False, "URL not flagged by VirusTotal"
+        return False, "URL not flagged by VirusTotal"
+    except requests.exceptions.HTTPError as http_err:
+        return False, f"HTTP error occurred: {http_err}"
+    except Exception as err:
+        return False, f"An error occurred: {err}"
 
 # Function to check URL structure and domain for phishing signs
 def is_suspicious(url):
     parsed_url = urlparse(url)
     domain = parsed_url.netloc
+    reasons = []
+
     if len(url) > 100:
-        return True, "URL length is suspicious"
-    domain_parts = domain.split('.')
-    if len(domain_parts) > 3:
-        return True, "Suspicious subdomains"
+        reasons.append("URL length is suspicious")
+    if len(domain.split('.')) > 3:
+        reasons.append("Suspicious subdomains")
     if parsed_url.scheme != "https":
-        return True, "Non-HTTPS URL"
+        reasons.append("Non-HTTPS URL")
+
     typosquatting, reason = is_typosquatting(domain)
     if typosquatting:
-        return True, reason
+        reasons.append(reason)
+
     keyword_flagged, reason = has_suspicious_keywords(url)
     if keyword_flagged:
-        return True, reason
+        reasons.append(reason)
+
     ip_flagged, reason = has_ip_in_url(url)
     if ip_flagged:
-        return True, reason
+        reasons.append(reason)
+
+    vt_flagged, vt_reason = check_virustotal(url)
+    if vt_flagged:
+        reasons.append(vt_reason)
+
+    if reasons:
+        return True, reasons
     return False, "URL seems safe"
 
 # Flask route to handle the URL check
@@ -82,10 +99,18 @@ def check_url():
     data = request.json
     url = data.get('url')
     if not url:
-        return jsonify({'result': 'No URL provided', 'isSafe': False})
-    
+        return jsonify({'result': 'No URL provided', 'isSafe': False}), 400  # Bad Request
+
     is_safe, result = is_suspicious(url)
-    return jsonify({'result': result, 'isSafe': is_safe})
+    
+    # Log the results for debugging purposes
+    app.logger.info(f"Checked URL: {url}")
+    app.logger.info(f"Is Safe: {not is_safe}")
+    app.logger.info(f"Result: {result}")
+    
+    if isinstance(result, list):
+        return jsonify({'result': result, 'isSafe': not is_safe})  # Return the list of reasons
+    return jsonify({'result': [result], 'isSafe': not is_safe})  # Wrap single result in a list
 
 # Route to serve the HTML file
 @app.route('/')
@@ -94,4 +119,4 @@ def index():
 
 # Main function to run the Flask app
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=config('FLASK_DEBUG', default=False))

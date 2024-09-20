@@ -65,9 +65,7 @@ for url in test_urls:
     VirusTotal for URL reputation checking.
     Python Requests library for HTTP requests.
 
-# Makefile
-To facilitate project management, you can use the following Makefile to automate common tasks:
-# Makefile for Phishing Link Scanner
+# Phishing Link Scanner
 
 .PHONY: install run test clean
 

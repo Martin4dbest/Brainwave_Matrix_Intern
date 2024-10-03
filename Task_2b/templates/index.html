@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Checker - BrainwaveMatrix Solution Project 2</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center vertically */
+            align-items: center; /* Center horizontally */
+            min-height: 100vh;
+        }
+        h1 {
+            color: #343a40;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #6c757d;
+            font-weight: normal;
+            margin-bottom: 30px;
+        }
+        p {
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+        input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 15px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            transition: border-color 0.3s;
+            box-sizing: border-box; /* Ensures padding is included in width */
+        }
+        input:focus {
+            border-color: #80bdff;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            max-width: 400px; /* Ensures button width matches input */
+            padding: 12px 15px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-sizing: border-box; /* Ensures padding is included in width */
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        #feedback {
+            color: red;
+            margin-top: 10px;
+        }
+        footer {
+            margin-top: auto;
+            padding: 20px 0;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Password Strength Checker</h1>
+    <h2>BrainwaveMatrix Solution Project 2</h2>
+    <p>Enter a password below to check its strength:</p>
+    
+    <input type="password" id="password" placeholder="Enter your password" aria-label="Password Input">
+    <button onclick="checkPassword()" aria-label="Check Password">Check Password</button>
+    
+    <div id="result"></div>
+    <div id="feedback"></div>
+
+    <footer>
+        <p>&copy; 2024 Password Strength Checker. All Rights Reserved.</p>
+        <p><i class="fas fa-shield-alt"></i> Your security matters to us.</p>
+    </footer>
+
+    <script>
+        function checkPassword() {
+            const password = document.getElementById('password').value;
+            
+            fetch('/check-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password: password }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = 'Strength: ' + data.strength;
+                document.getElementById('feedback').innerText = data.feedback.join(' ');
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+</body>
+</html>
